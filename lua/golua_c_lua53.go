@@ -1,4 +1,5 @@
-//+build lua53
+//go:build lua53
+// +build lua53
 
 package lua
 
@@ -229,4 +230,19 @@ func (L *State) RawSeti(index int, n int) {
 // lua_gc
 func (L *State) GC(what, data int) int {
 	return int(C.lua_gc(L.s, C.int(what), C.int(data)))
+}
+
+// lua_setupvalue
+func (L *State) SetUpvalue(funcindex, n int) {
+	C.lua_setupvalue(L.s, C.int(funcindex), C.int(n))
+}
+
+// lua_getupvalue
+func (L *State) GetUpvalue(funcindex, n int) {
+	C.lua_getupvalue(L.s, C.int(funcindex), C.int(n))
+}
+
+// lua_rawlen
+func (L *State) RawLen(index int) int {
+	return int(C.lua_rawlen(L.s, C.int(index)))
 }
