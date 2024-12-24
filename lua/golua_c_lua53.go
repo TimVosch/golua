@@ -104,6 +104,12 @@ void clua_openbit32(lua_State *L)
 	lua_pop(L, 1);
 }
 
+int clua_upvalueindex(int n)
+{
+  return lua_upvalueindex(n);
+}
+
+
 // dump function chunk from luaL_loadstring
 int dump_chunk (lua_State *L) {
 	luaL_Buffer b;
@@ -232,9 +238,17 @@ func (L *State) GC(what, data int) int {
 	return int(C.lua_gc(L.s, C.int(what), C.int(data)))
 }
 
+// lua_upvalueid
+func (L *State) UpvalueIndex(n int) int {
+	return int(C.clua_upvalueindex(C.int32_t(n)))
+}
+
 // lua_setupvalue
-func (L *State) SetUpvalue(funcindex, n int) {
-	C.lua_setupvalue(L.s, C.int(funcindex), C.int(n))
+func (L *State) SetUpvalue(funcindex, n int) int {
+	if C.lua_setupvalue(L.s, C.int(funcindex), C.int(n)) == nil {
+		return LUA_ERRRUN
+	}
+	return LUA_OK
 }
 
 // lua_getupvalue

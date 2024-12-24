@@ -136,27 +136,36 @@ func (L *State) PushGoFunction(f LuaGoFunction) {
 // this permits the go function to reflect lua type 'function' when checking with type()
 // this implements behaviour akin to lua_pushcfunction() in lua C API.
 func (L *State) PushGoClosure(f LuaGoFunction) {
-	L.PushGoFunction(f)      // leaves Go function userdata on stack
-	C.clua_pushcallback(L.s) // wraps the userdata object with a closure making it into a function
+	L.PushGoFunction(f)         // leaves Go function userdata on stack
+	C.clua_pushcallback(L.s, 0) // wraps the userdata object with a closure making it into a function
+}
+
+// PushGoClosureWithUpvalues pushes a GoClosure but provides upvalues starting at 2
+func (L *State) PushGoClosureWithUpvalues(f LuaGoFunction, nup uint) {
+	L.PushGoFunction(f) // leaves Go function userdata on stack
+	if nup > 0 {        // GoFunction must be at upvalue 1 so push it back
+		L.Insert(-int(nup) - 1)
+	}
+	C.clua_pushcallback(L.s, C.uint(nup)) // wraps the userdata object with a closure making it into a function
 }
 
 // Sets a metamethod to execute a go function
 //
 // The code:
 //
-// 	L.LGetMetaTable(tableName)
-// 	L.SetMetaMethod(methodName, function)
+//	L.LGetMetaTable(tableName)
+//	L.SetMetaMethod(methodName, function)
 //
 // is the logical equivalent of:
 //
-// 	L.LGetMetaTable(tableName)
-// 	L.PushGoFunction(function)
-// 	L.SetField(-2, methodName)
+//	L.LGetMetaTable(tableName)
+//	L.PushGoFunction(function)
+//	L.SetField(-2, methodName)
 //
 // except this wouldn't work because pushing a go function results in user data not a cfunction
 func (L *State) SetMetaMethod(methodName string, f LuaGoFunction) {
-	L.PushGoFunction(f)      // leaves Go function userdata on stack
-	C.clua_pushcallback(L.s) // wraps the userdata object with a closure making it into a function
+	L.PushGoFunction(f)         // leaves Go function userdata on stack
+	C.clua_pushcallback(L.s, 0) // wraps the userdata object with a closure making it into a function
 	L.SetField(-2, methodName)
 }
 
